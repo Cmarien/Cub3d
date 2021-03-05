@@ -6,9 +6,90 @@
 /*   By: cmarien <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/02 12:44:48 by cmarien           #+#    #+#             */
-/*   Updated: 2021/03/03 15:19:01 by cmarien          ###   ########.fr       */
+/*   Updated: 2021/03/05 15:25:04 by cmarien          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+
+#include "cub.h"
+
+char	*ft_substr(char const *s, unsigned int start, size_t len)
+{
+	char	*sub;
+	size_t	i;
+
+	if (start >= (unsigned int)ft_strlen(s))
+	{
+		if ((sub = malloc(sizeof(char) * 1)) == NULL)
+			return (NULL);
+		sub[0] = 0;
+		return (sub);
+	}
+	if ((sub = malloc(sizeof(char) * (len + 1))) == NULL)
+		return (NULL);
+	i = -1;
+	while (++i < len && s[start + i])
+		sub[i] = s[start + i];
+	sub[i] = '\0';
+	return (sub);
+}
+
+char	*ft_strdup(const char *src)
+{
+	char	*str;
+	int		i;
+	int		l;
+
+	l = 0;
+	i = 0;
+	while (src[l])
+		l++;
+	str = malloc(sizeof(char) * (l + 1));
+	if (str == NULL)
+		return (NULL);
+	while (src[i])
+	{
+		str[i] = src[i];
+		i++;
+	}
+	str[i] = '\0';
+	return (str);
+}
+
+int	ft_atoi(const char *str, int i)
+{
+	int sign;
+	int nb;
+
+	sign = 1;
+	nb = 0;
+	while (str[i] && str[i] == ' ')
+		i++;
+	if (str[i] == '-')
+	{
+		sign = -sign;
+		i++;
+	}
+	else if (str[i] == '+')
+		i++;
+	while (str[i] <= '9' && str[i] >= '0')
+	{
+		nb *= 10;
+		nb += str[i] - '0';
+		i++;
+	}
+	return (nb * sign);
+}
+
+int		ft_strlen(const char *str)
+{
+	int i;
+
+	i = 0;
+	if (str)
+		while (str[i])
+			i++;
+	return (i);
+}
 
 char	*ft_strjoin(char const *s1, char const *s2)
 {
@@ -50,7 +131,7 @@ int		check_map_format(char *str)
 	if (str[i + 1] == 'c' && str[i + 2] == 'u' && str[i + 3] == 'b' &&
 			str[i + 4] == '\0')
 	{
-		if (i = open(str, O_RDONLY) == -1)
+		if ((i = open(str, O_RDONLY)) == -1)
 			return (0);
 		close(i);
 		return (i);
@@ -61,62 +142,67 @@ int		check_map_format(char *str)
 	return (0);
 }
 
-t_cub	error_code(char c)
+int		error_code(char c)
 {
 	if (c == 'R')
-		write("Error\nWrong Resolution", 22);
+		write(2, "Error\nWrong Resolution", 22);
 	else if (c == 'T')
-		write("Error\nWrong Texture Path", 30);
+		write(2, "Error\nWrong Texture Path", 30);
 	else if (c == 'F')
-		write("Error\nWrong Floor Color Code", 28);
+		write(2, "Error\nWrong Floor Color Code", 28);
 	else if (c == 'C')
-		write("Error\nWrong Ceiling Color Code", 31);
+		write(2, "Error\nWrong Ceiling Color Code", 31);
 	else if (c == 'c')
-		write("Error\nWrong Line In Configuration File", 39);
+		write(2, "Error\nWrong Line In Configuration File", 39);
+	else if (c == 'M')
+		write(2, "Error\nWrong Map Configuration", 29);
+	else if (c == 'A')
+		write(2, "Error\nCrash While Allocating Memory", 35); 
+	return (0);
 }
 
-t_cub	resolution_check(char *line, t_cub cub, int index)
+int		resolution_check(char *line, t_cub *cub, int index)
 {
-	if (cub.res_x = ft_atoi(line, index) < 0)
+	if ((cub->res_x = ft_atoi(line, index)) < 0)
 		return (error_code('R'));
 	while (line[index] >= '0' && line[index] <= '9')
 		index++;
-	if (cub.res_y = ft_atoi(line, index) < 0)
+	if ((cub->res_y = ft_atoi(line, index)) < 0)
 		return (error_code('R'));
 	while (line[index] >= '0' && line[index] <= '9')
 		index++;
 	while (line[index])
 		if (line[index++] != ' ')
 			return (error_code('R'));
-	return (cub);
+	return (1);
 }
 
-t_cub	texture_path_check(char *line , t_cub cub, int index, char orientation)
+int		texture_path_check(char *line , t_cub *cub, int index, char orientation)
 {
 	while (line[index] == ' ')
 		index++;
 	if (orientation == 'N')
-		cub.north = ft_str_i_dup(line, index);
+		cub->north = ft_substr(line, index, ft_strlen(line) - (index + 1));
 	else if (orientation == 'S')
-		cub.south = ft_str_i_dup(line, index);
+		cub->south = ft_substr(line, index, ft_strlen(line) - (index + 1));
 	else if (orientation == 'E')
-		cub.east = ft_str_i_dup(line, index);
+		cub->east = ft_substr(line, index, ft_strlen(line) - (index + 1));
 	else if (orientation == 'W')
-		cub.west = ft_str_i_dup(line, index);
+		cub->west = ft_substr(line, index, ft_strlen(line) - (index + 1));
 	else if (orientation == 's')
-		cub.sprite = ft_str_i_dup(line,index);
+		cub->sprite = ft_substr(line, index, ft_strlen(line) - (index + 1));
 	else
 		return (error_code('T'));
 	while (line[index] == ' ')
 		index++;
 	if (line[index])
 		return (error_code('T'));
-	return (cub);
+	return (1);
 }
 
-t_cub	floor_check(char *line, t_cub cub, int index)
+int		floor_check(char *line, t_cub *cub, int index)
 {
-	if (cub.floor_r = ft_atoi(line, index) < 0)
+	if ((cub->floor_color = (ft_atoi(line, index) * 65536)) < 0)
 		return (error_code('F'));
 	while (line[index] >= '0' && line[index] <= '9')
 		index++;
@@ -124,7 +210,7 @@ t_cub	floor_check(char *line, t_cub cub, int index)
 		index++;
 	if (line[index] == ',')
 		index++;
-	if (cub.floor_g = ft_atoi(line, index) < 0)
+	if ((cub->floor_color += (ft_atoi(line, index) * 256)) < 0)
 		return (error_code('F'));
 	while (line[index] >= '0' && line[index] <= '9')
 		index++;
@@ -132,19 +218,19 @@ t_cub	floor_check(char *line, t_cub cub, int index)
 		index++;
 	if (line[index] == ',')
 		index++;
-	if (cub.floor_b = ft_atoi(line, index) < 0)
+	if ((cub->floor_color += ft_atoi(line, index)) < 0)
 		return (error_code('F'));
 	while (line[index] >= '0' && line[index] <= '9')
 		index++;
 	while (line[index])
 		if (line[index++] != ' ')
 			return (error_code('F'));
-	return (cub);
+	return (1);
 }
 
-t_cub	ceiling_check(char *line, t_cub cub, int index)
+int		ceiling_check(char *line, t_cub *cub, int index)
 {
-	if (cub.ceiling_r = ft_atoi(line, index) < 0)
+	if ((cub->ceiling_color = (ft_atoi(line, index) * 65536)) < 0)
 		return (error_code('C'));
 	while (line[index] >= '0' && line[index] <= '9')
 		index++;
@@ -152,7 +238,7 @@ t_cub	ceiling_check(char *line, t_cub cub, int index)
 		index++;
 	if (line[index] == ',')
 		index++;
-	if (cub.ceiling_g = ft_atoi(line, index) < 0)
+	if ((cub->ceiling_color += (ft_atoi(line, index) * 256)) < 0)
 		return	(error_code('C'));
 	while (line[index] >= '0' && line[index] <= '9')
 		index++;
@@ -160,27 +246,29 @@ t_cub	ceiling_check(char *line, t_cub cub, int index)
 		index++;
 	if (line[index] == ',')
 		index++;
-	if (cub.ceiling_b = ft_atoi(line, index) < 0)
+	if ((cub->ceiling_color += ft_atoi(line, index)) < 0)
 		return (error_code('C'));
 	while (line[index] >= '0' && line[index] <= '9')
 		index++;
 	while (line[index])
 		if (line[index++] != ' ')
 			return (error_code('C'));
-	return (cub);
+	return (1);
 }
 
-t_cub	map_check(char *line, t_cub cub, int index)
+int		map_verif(char *line, t_cub *cub)
 {
-	if (cub.start == 0)
+	if (cub->start == 0)
 	{
-		cub.start = 1;
-		cub.map = ft_strdup(line);
-		return (cub);
+		cub->start = 1;
+		cub->str = ft_strdup(line);
+		if (cub->str == NULL)
+			return (error_code('A'));
 	}
+	return (1);
 }
 
-t_cub	check_line(char *line, t_cub cub);
+int		check_line(char *line, t_cub *cub)
 {
 	int			index;
 
@@ -197,18 +285,18 @@ t_cub	check_line(char *line, t_cub cub);
 		return (texture_path_check(line, cub, index + 1, 'E'));
 	else if (line[index] == 'W' && line[index + 1] == 'E')
 		return (texture_path_check(line, cub, index + 1, 'W'));
-	else if (line[index] = 'S' && line[index + 1] == ' ')
+	else if (line[index] == 'S' && line[index + 1] == ' ')
 		return (texture_path_check(line, cub, index + 1, 's'));
-	else if (line[index] = 'F')
+	else if (line[index] == 'F')
 		return (floor_check(line, cub, index + 1));
-	else if (line[index] = 'C')
+	else if (line[index] == 'C')
 		return (ceiling_check(line, cub, index + 1));
 	else if (line[index] == '1')
-		return (map_check(line, cub, index + 1));
-	return (error_code('c');
+		return (map_verif(line, cub));
+	return (error_code('c'));
 }
 
-void	map_create(char *lines, int ***map)
+int		map_create(char *lines, int ***map)
 {
 	int index;
 	int	j;
@@ -217,22 +305,117 @@ void	map_create(char *lines, int ***map)
 	index = -1;
 	count = 0;
 	j = 0;
-	while (line[++index])
-		if (line[index] == '\n')
+	while (lines[++index])
+		if (lines[index] == '\n')
 			count++;
 	if(!(map = malloc(sizeof(int *) * count)))
-		return (NULL);
+		return (error_code('A'));
 	index = -1;
 	count = 0;
-	while (line[++index])
-		if (line[index] != '\n')
+	while (lines[++index])
+		if (lines[index] != '\n')
 			count++;
 		else
 		{
 			if(!(map[j++] = malloc(sizeof(int) * count)))
-				return (NULL);
+				return (error_code('A'));
 			count = 0;
 		}
+	return (1);
+}
+
+int		border_map_check_2(int **map, int i, int j, int x)
+{
+		if (i == x)
+		{
+			if (j == 0)
+				if ((map[j + 1][i] != 32 && map[j + 1][i] != '1') ||
+					(map[j][i - 1] != 32 && map[j][i - 1] != '1'))
+					return (0);
+			if (j > 0)
+				if ((map[j - 1][i] != 32 && map[j - 1][i] != '1') ||
+					(map[j][i - 1] != 32 && map[j][i - 1] != '1'))
+					return (0);
+		}
+		if (i > 0 && i < x)
+		{
+			if (j == 0)
+				if ((map[j + 1][i] != 32 && map[j + 1][i] != '1') ||
+					(map[j][i + 1] != 32 && map[j][i + 1] != '1') ||
+					(map[j][i - 1] != 32 && map[j][i + 1] != '1'))
+					return (0);
+			if (j > 0)
+				if ((map[j - 1][i] != 32 && map[j - 1][i] != '1') ||
+					(map[j][i + 1] != 32 && map[j][i + 1] != '1') ||
+					(map[j][i - 1] != 32 && map[j][i - 1] != '1'))
+					return (0);
+		}
+		return (1);
+}
+
+int		border_map_check(int **map, int i, int j, int x)
+{
+	if (map[j][i] != 32 && map[j][i] != '1')
+		return (0);
+	else if (map[j][i] == 32)
+	{
+		if (i == 0)
+		{
+			if (j == 0)
+				if ((map[j + 1][i] != 32 && map[j + 1][i] != '1') ||
+					(map[j][i + 1] != 32 && map[j][i + 1] != '1'))
+					return (0);
+			if (j > 0)
+				if ((map[j - 1][i] != 32 && map[j - 1][i] != '1') ||
+					(map[j][i + 1] != 32 && map[j][i + 1] != '1'))
+					return (0);
+			if (border_map_check_2(map, i, j, x) == 0)
+				return (0);
+		}
+	}
+	return (1);
+}
+
+int		core_map_check_2(int **map, int i, int j, int t)
+{
+		if (i == 0)
+		{
+			if ((map[j + 1][i] != t && map[j + 1][i] != '1') ||
+				(map[j][i + 1] != t && map[j][i + 1] != '1') ||
+				(map[j - 1][i] != t && map[j - 1][i] != '1'))
+				return (0);
+		}
+		return (1);
+}
+
+int		core_map_check(int **map, int i, int j, int x)
+{
+	int t;
+
+	t = map[j][i];
+	if (t != '1' && t != '0' && t != 32)
+		t = '0';
+	if (t != '1')
+	{
+		if (core_map_check_2(map, i, j, t) == 0)
+			return (0);
+		if (i == x)
+		{
+			if ((map[j + 1][i] != t && map[j + 1][i] != '1') ||
+				(map[j][i - 1] != t && map[j][i - 1] != '1') ||
+				(map[j - 1][i] != t && map[j - 1][i] != '1'))
+				return (0);
+		}
+		if (i > 0 && i < x)
+		{
+			if ((map[j + 1][i] != t && map[j + 1][i] != '1') ||
+				(map[j][i + 1] != t && map[j][i + 1] != '1') ||
+				(map[j - 1][i] != t && map[j - 1][i] != '1') ||
+				(map[j][i - 1] != t && map[j][i - 1] != '1'))
+				return (0);
+		}
+	}
+	return (1);
 }
 
 int		map_check(int **map, int x, int y)
@@ -240,44 +423,44 @@ int		map_check(int **map, int x, int y)
 	int	i;
 	int	j;
 
-	i = 0;
-	j = 0;
-	while (map[j][i] == 0 && i < x)
-		i++;
-	while (map[j][i] == 1 && i < x)
-		i++;
-	while (map[j][i] == 0 && i < x)
-		if (map[j][i] != 0)
-			return (error_code('M'));
-	while (j++ < y)
+	j = -1;
+	while (++j < y)
 	{
-		i = 0;
-		while (map[j][i] == 0 && i < x)
-			i++;
+		i = -1;
+		while (++i <= x)
+			if (map[j][i] != '1')
+			{
+				if (j == 0 || j == y)
+					if (border_map_check(map, i, j, x) == 0)
+						return (error_code('M'));
+				if (j > 0 && j < y)
+					if (core_map_check(map, i, j, x) == 0)
+						return (error_code('M'));
+			}
 	}
+	return (1);
 }
 
-void	map_edit(char *lines, int ***map, int *x, int *y)
+int		map_edit(t_cub *cub)
 {
 	int	index;
 
 	index = -1;
-	x = 0;
-	y = 0;
-	while (line[++index])
+	cub->x = 0;
+	cub->y = 0;
+	while (cub->str[++index])
 	{
-		if (line[index] == '\n' && line[index + 1] != '\0')
+		if (cub->str[index] == '\n' && cub->str[index + 1] != '\0')
 		{	
-			y++;
-			x = 0;
+			cub->y++;
+			cub->x = 0;
 		}
-		else if (line[index] == ' ')
-			map[y][x++] = 0;
 		else
-			map[y][x++] = line[index];
+			cub->map[cub->y][cub->x++] = cub->str[index];
 	}
-	x--;
-	return (map_check(*map, x, y));
+	cub->x--;
+	cub->error = map_check(cub->map, cub->x, cub->y);
+	return (cub->error);
 }
 
 t_cub	cub_parse(char *str)
@@ -288,21 +471,28 @@ t_cub	cub_parse(char *str)
 	char	*line;
 
 	cub.start = 0;
-	if (fd = check_map_format(str) == 0)
-		return (NULL);
+	cub.error = 1;
+	if ((fd = check_map_format(str)) == 0)
+		return (cub);
 	while (get_next_line(fd, &line) != 0)
 	{
 		if (cub.start == 1)
 		{
-			tmp = ft_join(cub.str, line);
+			tmp = ft_strjoin(cub.str, line);
 			free(cub.str);
 			cub.str = tmp;
 		}
 		else
-			if (cub = check_line(line, cub) == NULL)
-				return (NULL);
+			if (check_line(line, &cub) == 0)
+			{
+				cub.error = 0;
+				return (cub);
+			}
 		free(line);
 	}
-	map_create(cub.str, &cub.map);
-	map_edit(cub.str, &cub.map, &cub.x, &cub.y);
+	if (map_create(cub.str, &cub.map) == 0)
+		return (cub);
+	if (map_edit(&cub) == 0)
+		return (cub);
+	return (cub);
 }
