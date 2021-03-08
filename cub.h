@@ -6,7 +6,7 @@
 /*   By: cmarien <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/05 13:27:16 by cmarien           #+#    #+#             */
-/*   Updated: 2021/03/05 15:21:52 by cmarien          ###   ########.fr       */
+/*   Updated: 2021/03/08 10:34:03 by cmarien          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@
 #include <stdlib.h>
 
 int	ft_strlen(const char *str);
+int	get_next_line(int fd, char **line);
+char	*ft_strdup(const char *s1);
 
 typedef struct s_cub
 {
