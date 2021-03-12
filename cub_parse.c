@@ -6,7 +6,7 @@
 /*   By: cmarien <marvin@42.fr>                     +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/03/02 12:44:48 by cmarien           #+#    #+#             */
-/*   Updated: 2021/03/08 15:43:58 by cmarien          ###   ########.fr       */
+/*   Updated: 2021/03/12 14:11:39 by cmarien          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,8 +62,8 @@ int	ft_atoi(const char *str, int *i)
 	int nb;
 
 	sign = 1;
-	nb = 0;
-	while (str[*i] && str[*i] == ' ')
+	nb = -1;
+	while (str[*i] && (str[*i] == ' ' || str[*i] == '\t'))
 		*i += 1;
 	if (str[*i] == '-')
 	{
@@ -72,6 +72,8 @@ int	ft_atoi(const char *str, int *i)
 	}
 	else if (str[*i] == '+')
 		*i += 1;
+	if (str[*i] <= '9' && str[*i] >= '0')
+		nb = 0;
 	while (str[*i] <= '9' && str[*i] >= '0')
 	{
 		nb *= 10;
@@ -170,7 +172,9 @@ int		error_code(char c)
 	else if (c == 'A')
 		write(2, "Error\nCrash While Allocating Memory", 35);
 	else if (c == 'P')
-		write(2, "Error\nNo Player In Map", 23);
+		write(2, "Error\nNo Player In Map", 22);
+	else if (c == 'p')
+		write(2, "Error\nToo Many Player In Map", 28);
 	return (0);
 }
 
@@ -178,17 +182,11 @@ int		resolution_check(char *line, t_cub *cub, int index)
 {
 	if ((cub->res_x = ft_atoi(line, &index)) < 0)
 		return (error_code('R'));
-	while (line[index] == ' ')
-		index++;
-	while (line[index] >= '0' && line[index] <= '9')
-		index++;
 	if ((cub->res_y = ft_atoi(line, &index)) < 0)
 		return (error_code('R'));
-	while (line[index] >= '0' && line[index] <= '9')
-		index++;
 	while (line[index])
 	{
-		if (line[index] != ' ' && line[index] != '\n')
+		if ((line[index] != ' ' || line[index] == '\t') && line[index] != '\n')
 			return (error_code('R'));
 		index++;
 	}
@@ -197,7 +195,7 @@ int		resolution_check(char *line, t_cub *cub, int index)
 
 int		texture_path_check(char *line , t_cub *cub, int index, char orientation)
 {
-	while (line[index] == ' ')
+	while (line[index] == ' ' || line[index] == '\t')
 		index++;
 	if (line[index] == '\0')
 		return (error_code('T'));
@@ -215,7 +213,7 @@ int		texture_path_check(char *line , t_cub *cub, int index, char orientation)
 		return (error_code('T'));
 	while (line[index + 1])
 	{
-		if (line[index] == ' ' && (line[index + 1] != ' ' && line[index + 1] != '\n'))
+		if ((line[index] == ' ' || line[index] == '\t') && (line[index + 1] != ' ' && line[index + 1] != '\t' && line[index + 1] != '\n'))
 			return (error_code('T'));
 		index++;
 	}
@@ -226,16 +224,21 @@ int		floor_check(char *line, t_cub *cub, int index)
 {
 	if ((cub->floor_color = (ft_atoi(line, &index) * 65536)) < 0)
 		return (error_code('F'));
+	while (line[index] == ' ' || line[index] == '\t')
+		index++;
 	if (line[index] == ',')
 		index++;
 	if ((cub->floor_color += (ft_atoi(line, &index) * 256)) < 0)
 		return (error_code('F'));
+	while (line[index] == ' ' || line[index] == '\t')
+		index++;
 	if (line[index] == ',')
 		index++;
 	if ((cub->floor_color += ft_atoi(line, &index)) < 0)
 		return (error_code('F'));
-	while (line[index])
-		if (line[index++] != ' ')
+	index--;
+	while (line[++index])
+		if (line[index] != ' ' && line[index] != '\t')
 			return (error_code('F'));
 	return (1);
 }
@@ -244,16 +247,21 @@ int		ceiling_check(char *line, t_cub *cub, int index)
 {
 	if ((cub->ceiling_color = (ft_atoi(line, &index) * 65536)) < 0)
 		return (error_code('C'));
+	while (line[index] == ' ' || line[index] == '\t')
+		index++;
 	if (line[index] == ',')
 		index++;
 	if ((cub->ceiling_color += (ft_atoi(line, &index) * 256)) < 0)
 		return	(error_code('C'));
+	while (line[index] == ' ' || line[index] == '\t')
+		index++;
 	if (line[index] == ',')
 		index++;
 	if ((cub->ceiling_color += ft_atoi(line, &index)) < 0)
 		return (error_code('C'));
-	while (line[index])
-		if (line[index++] != ' ')
+	index--;
+	while (line[++index])
+		if (line[index] != ' ' && line[index] != '\t')
 			return (error_code('C'));
 	return (1);
 }
@@ -278,7 +286,7 @@ int		check_line(char *line, t_cub *cub)
 	index = 0;
 	if (line[index] == '\0')
 		return (1);
-	while (line[index] == ' ')
+	while (line[index] == ' ' || line[index] == '\t')
 		index++;
 	if (line[index] == 'R')
 		return (resolution_check(line, cub, index + 1));
@@ -451,7 +459,6 @@ int		map_check(int **map, int x, int y)
 	{
 		i = -1;
 		while (++i <= x)
-		{
 			if (map[j][i] != '1')
 			{
 				if (map[j][i] == 'N' || map[j][i] == 'W' || map[j][i] == 'S'
@@ -464,9 +471,10 @@ int		map_check(int **map, int x, int y)
 					if (core_map_check(map, i, j, x) == 0)
 						return (error_code('M'));
 			}
-		}
 	}
-	return (is_player == 1 ? 1 : error_code('P'));
+	if (is_player == 1)
+		return (1);
+	return (is_player == 0 ? error_code('P') : error_code('p'));
 }
 
 int		map_edit(t_cub *cub)
